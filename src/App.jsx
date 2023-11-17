@@ -1,6 +1,7 @@
 import Button from '@mui/material/Button'
 import HomeIcon from '@mui/icons-material/home'
-import { pink } from '@mui/material/colors'
+import { pink } from '@mui/material/colors/'
+import AccountBalance from '@mui/icons-material/accountbalance'
 
 function App() {
 
@@ -15,6 +16,7 @@ function App() {
       <HomeIcon color="action" />
       <HomeIcon color="disabled" />
       <HomeIcon sx={{ color: pink[500] }} />
+      <AccountBalance color="action" />
     </>
   )
 }
