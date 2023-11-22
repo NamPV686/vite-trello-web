@@ -33,7 +33,7 @@ function Profile() {
           aria-expanded={open ? 'true' : undefined}
         >
           <Avatar
-            sx={{ width: 28, height: 28 }}
+            sx={{ width: 34, height: 34 }}
             src='https://files.fullstack.edu.vn/f8-prod/blog_posts/107/613a1e8d8fc47.jpg'
             alt='Trello'
           />
