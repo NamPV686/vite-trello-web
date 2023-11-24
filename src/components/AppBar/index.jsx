@@ -33,8 +33,9 @@ function AppBar() {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 2,
-        px: '2px',
+        px: 2,
         overflowX: 'auto',
+        overflowY: 'hidden',
         bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#2c3e50' : '#1565c0')
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -70,7 +71,7 @@ function AppBar() {
             onChange={(e) => setSearchValue(e.target.value)}
             InputProps={{
               startAdornment: (
-                <InputAdornment>
+                <InputAdornment position='start'>
                   <SearchIcon sx={{ color: 'white' }} />
                 </InputAdornment>
               ),
