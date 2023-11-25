@@ -3,7 +3,8 @@ import Colums from './Colums/Colums'
 import { Button } from '@mui/material'
 import NoteAddIcon from '@mui/icons-material/NoteAdd'
 
-function ListColums() {
+function ListColums(props) {
+  const { columns } = props
   return (
     <Box sx={{
       bgcolor: 'inherit',
@@ -14,10 +15,11 @@ function ListColums() {
       overflowY: 'hidden',
       '&::-webkit-scrollbar-track': { m: 2 }
     }}>
-      <Colums />
-      <Colums />
-      <Colums />
-
+      {columns?.map((column) => {
+        return (
+          <Colums key={column._id} column={column} />
+        )
+      })}
       {/* Add new Column */}
       <Box sx={{
         minWidth: '200px',
