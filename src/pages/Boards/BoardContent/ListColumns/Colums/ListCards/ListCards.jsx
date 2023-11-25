@@ -1,7 +1,8 @@
 import { Box } from '@mui/system'
 import Card from './Card/Card'
 
-function ListCards() {
+function ListCards(props) {
+  const { cards } = props
   return (
     <Box sx={{
       p: 2,
@@ -19,8 +20,11 @@ function ListCards() {
       '::-webkit-scrollbar-thumb': { backgroundColor: '#ced0da' },
       '::-webkit-scrollbar-thumb:hover': { backgroundColor: '#bfc2cf' }
     }}>
-      <Card />
-      <Card temporaryHideMedia />
+      {cards?.map((card) => {
+        return (
+          <Card key={card._id} card={card} />
+        )
+      })}
     </Box>
   )
 }
