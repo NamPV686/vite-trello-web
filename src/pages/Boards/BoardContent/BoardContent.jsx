@@ -177,7 +177,9 @@ function BoardContent(props) {
 
   return (
     <DndContext
+    //Cảm biến đã giải thích ở video 30. Kéo thả Trello Columns | Chuột - Ngón tay - Bút cảm ứng
       sensors={sensors}
+      //Thuật toán phát hiện va chạm (nếu không có nó thì card với cover lớn sẽ không kéo qua column được vì lúc này nó đang bị conflic giữa card và column), chúng ta sẽ dùng closestCorners thay vì closestCenter
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
       onDragOver={handlDragOver}
