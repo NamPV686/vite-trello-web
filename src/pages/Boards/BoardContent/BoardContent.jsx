@@ -9,11 +9,15 @@ import {
   useSensors,
   DragOverlay,
   defaultDropAnimationSideEffects,
-  closestCorners
+  closestCorners,
+  pointerWithin,
+  rectIntersection,
+  getFirstCollision,
+  closestCenter
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import { cloneDeep } from 'lodash'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Colums from './ListColumns/Colums/Colums'
 import Card from './ListColumns/Colums/ListCards/Card/Card'
 
@@ -44,6 +48,9 @@ function BoardContent(props) {
   const [activeDragItemType, setActiveDragItemType] = useState(null)
   const [activeDragItemData, setActiveDragItemData] = useState(null)
   const [oldColumnWhenDraggingCard, setOldColumnWhenDraggingCard] = useState(null)
+
+  //Điểm va chạm cuối cùng trước đó (xử lý thuật toán phát hiện va chạm video 37)
+  const lastOverId = useRef(null)
 
   useEffect(() => {
     setOrderedColumns(mapOrder(board?.columns, board?.columnOrderIds, '_id'))
@@ -254,18 +261,64 @@ function BoardContent(props) {
 
   }
 
-  const dropAnimation = {
+  const customerDropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
       styles: { active: { opacity: '0.5' } }
     })
   }
+
+  //Chúng ta sẽ customer lại chiến lược/ thuật toán phát hiện va chạm tối ưu giữa nhiều column (fix bug video 37)
+  //args: arguments = Các đối số, tham số
+  const collisionDetectionStrategy = useCallback((args) => {
+  //Trường hợp kéo column thì dùng thuataj toán closestCenter là chuẩn nhất
+    if (activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) {
+      return closestCorners({ ...args })
+    }
+
+    //Tìm các điểm giao nhau, va chạm (intersections) với con trỏ
+    const pointerIntersections = pointerWithin(args)
+
+    //Thuật toán va chạm sẽ trả về 1 mảng các va chạm ở đây
+    const intersections = !!pointerIntersections?.length ? pointerIntersections : rectIntersection(args)
+
+    //Tìm overId đâu tiên trong đám va chạm
+    let overId = getFirstCollision(intersections, 'id')
+
+    if (overId) {
+    // Video 37: Đoạn này để fix flickering
+    //Nếu cái over là column thì sẽ tìm tới cái cardId gần nhất bên trong khu vực va chạm đó dựa vào thuật toán phát hiện va chạm closestCenter hoặc closestCorners. Tuy nhiên ở đây dùng closestCenter thấy mượt hơn
+
+      const checkColumn = orderedColumns.find(column => column._id === overId)
+      if (checkColumn) {
+      // console.log('overId before', overId)
+        overId = closestCenter({
+          ...args,
+          droppableContainers: args.droppableContainers.filter(container => {
+            return (container.id !== overId) && (checkColumn ?.cardOrderIds?.includes(container.id))
+          })
+        })[0]?.id
+        // console.log('overId after', overId)
+      }
+
+      lastOverId.current = overId
+      return [{ id: overId }]
+    }
+
+    //Nếu overId null thì trả về mảng rỗng - tránh bug và crash trang
+    return lastOverId.current ? [{ id: lastOverId.current }] : []
+  }, [activeDragItemType, orderedColumns])
 
   return (
     <DndContext
     //Cảm biến đã giải thích ở video 30. Kéo thả Trello Columns | Chuột - Ngón tay - Bút cảm ứng
       sensors={sensors}
       //Thuật toán phát hiện va chạm (nếu không có nó thì card với cover lớn sẽ không kéo qua column được vì lúc này nó đang bị conflic giữa card và column), chúng ta sẽ dùng closestCorners thay vì closestCenter
-      collisionDetection={closestCorners}
+      //Update video 37: Nếu chỉ dùng closestCorners sẽ xảy ra lỗi flickering + sai dữ liệu
+      // collisionDetection={closestCorners}
+
+      //Tự customer nâng cao thuật toán va chạm
+      collisionDetection={collisionDetectionStrategy}
+
       onDragStart={handleDragStart}
       onDragOver={handlDragOver}
       onDragEnd={handleDragEnd}
@@ -278,7 +331,7 @@ function BoardContent(props) {
       }}>
         {/* ListColums */}
         <ListColums columns={orderedColumns}/>
-        <DragOverlay dropAnimation={dropAnimation}>
+        <DragOverlay dropAnimation={customerDropAnimation}>
           {(!activeDragItemType) && null}
           {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.COLUMN) && <Colums column={activeDragItemData} />}
           {(activeDragItemType === ACTIVE_DRAG_ITEM_TYPE.CARD) && <Card card={activeDragItemData} />}
